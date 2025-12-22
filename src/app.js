@@ -11,6 +11,9 @@ app.use(express.json());
 const adminAuth = require('./routes/admin.auth');
 app.use('/admin', adminAuth);
 
+const adminRoutes =require("./routes/admin.routes");
+app.use("/admin", adminRoutes);
+
 // JWT 테스트용 보호 라우트
 const testProtectedRoute =require('./routes/test.protected');
 app.use('/api', testProtectedRoute);
