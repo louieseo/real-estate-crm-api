@@ -14,6 +14,12 @@ app.use('/admin', adminAuth);
 const adminRoutes =require("./routes/admin.routes");
 app.use("/admin", adminRoutes);
 
+const agentAuth =require("./routes/agent.auth");
+app.use("/agent", agentAuth);
+
+const agentRoutes =require("./routes/agent.routes");
+app.use("/agent", agentRoutes);
+
 // JWT 테스트용 보호 라우트
 const testProtectedRoute =require('./routes/test.protected');
 app.use('/api', testProtectedRoute);
