@@ -61,4 +61,79 @@ router.get("/customers/:id", auth, isAgent, async (req, res) => {
   }
 });
 
+// 고객 수정 API
+router.put("/customers/:id", auth, isAgent, async (req, res) => {
+  const customerId = req.params.id;
+  const { name, phone, email, memo, status } = req.body;
+
+  try {
+    // 먼저 해당 고객이 직원 소유인지 확인
+    const check = await pool.query(
+      "SELECT * FROM customers WHERE id = $1 AND agent_id = $2",
+      [customerId, req.user.agentId]
+    );
+
+    if (check.rows.length === 0) {
+      return res.status(404).json({
+        message: "Customer not found or you do not have permission",
+      });
+    }
+
+    // 고객 정보 업데이트
+    const result = await pool.query(
+      `UPDATE customers
+       SET name = $1,
+           phone = $2,
+           email = $3,
+           memo = $4,
+           status = $5
+       WHERE id = $6
+       RETURNING *`,
+      [name, phone, email, memo, status, customerId]
+    );
+
+    res.json({
+      message: "Customer updated successfully",
+      customer: result.rows[0],
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to update customer",
+      error: err.message,
+    });
+  }
+});
+
+// 고객 삭제 API
+router.delete("/customers/:id", auth, isAgent,async (req, res) => {
+try {
+const customerId = req.params.id;
+
+const result =await pool.query(
+"DELETE FROM customers WHERE id = $1 AND agent_id = $2",
+      [customerId, req.user.agentId]
+    );
+
+if (result.rowCount ===0) {
+return res.status(404).json({
+message:"Customer not found or you do not have permission"
+      });
+    }
+
+    res.json({
+message:"Customer deleted successfully"
+    });
+  }catch (err) {
+    res.status(500).json({
+message:"Customer delete failed",
+error: err.message
+    });
+  }
+});
+
+
+
+
+
+
 module.exports = router;
