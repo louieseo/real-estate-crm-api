@@ -20,6 +20,11 @@ app.use("/agent", agentAuth);
 const agentRoutes =require("./routes/agent.routes");
 app.use("/agent", agentRoutes);
 
+const customerRoutes =require("./routes/customer.routes");
+app.use("/customers", customerRoutes);
+
+
+
 // JWT 테스트용 보호 라우트
 const testProtectedRoute =require('./routes/test.protected');
 app.use('/api', testProtectedRoute);
