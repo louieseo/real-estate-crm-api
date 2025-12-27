@@ -7,6 +7,8 @@ const isAdmin = require("../middlewares/isAdmin");
 
 const router = express.Router();
 
+
+
 // 관리자 대시보드
 router.get("/dashboard", auth, isAdmin, (req, res) => {
   res.json({
@@ -14,7 +16,6 @@ router.get("/dashboard", auth, isAdmin, (req, res) => {
     admin: req.user,
   });
 });
-
 
 // 관리자 전용 직원(Agent) 생성 API
 router.post("/agents", auth, isAdmin, async (req, res) => {
@@ -69,6 +70,41 @@ router.post("/agents", auth, isAdmin, async (req, res) => {
     });
   }
 });
+
+// 모든 고객 조회 API (관리자 전용)
+router.get("/customers", auth, isAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT
+          c.id,
+          c.name,
+          c.phone,
+          c.email,
+          c.memo,
+          c.status,
+          c.created_at,
+          a.id AS agent_id,
+          a.name AS agent_name,
+          a.email AS agent_email
+        FROM customers c
+        LEFT JOIN agents a
+          ON c.agent_id = a.id
+        ORDER BY c.id DESC`
+    );
+
+    res.json({
+      message: "Admin customer list loaded",
+      total: result.rowCount,
+      customers: result.rows,
+    });
+  } catch (err) {
+    res.status(500).json({
+      message: "Failed to load admin customer list",
+      error: err.message,
+    });
+  }
+});
+
 
 
 // 이 줄은 항상 파일 맨 아래

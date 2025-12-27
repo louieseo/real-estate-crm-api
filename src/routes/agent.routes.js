@@ -105,35 +105,69 @@ router.put("/customers/:id", auth, isAgent, async (req, res) => {
 });
 
 // 고객 삭제 API
-router.delete("/customers/:id", auth, isAgent,async (req, res) => {
-try {
-const customerId = req.params.id;
+router.delete("/customers/:id", auth, isAgent, async (req, res) => {
+  try {
+    const customerId = req.params.id;
 
-const result =await pool.query(
-"DELETE FROM customers WHERE id = $1 AND agent_id = $2",
+    const result = await pool.query(
+      "DELETE FROM customers WHERE id = $1 AND agent_id = $2",
       [customerId, req.user.agentId]
     );
 
-if (result.rowCount ===0) {
-return res.status(404).json({
-message:"Customer not found or you do not have permission"
+    if (result.rowCount === 0) {
+      return res.status(404).json({
+        message: "Customer not found or you do not have permission",
       });
     }
 
     res.json({
-message:"Customer deleted successfully"
+      message: "Customer deleted successfully",
     });
-  }catch (err) {
+  } catch (err) {
     res.status(500).json({
-message:"Customer delete failed",
-error: err.message
+      message: "Customer delete failed",
+      error: err.message,
     });
   }
 });
 
+// 고객 등록 (직원 전용 API)
+router.post("/customers", auth, isAgent, async (req, res) => {
+  try {
+    const { name, phone, email, memo, status } = req.body;
 
+    if (!name || !phone) {
+      return res.status(400).json({
+        message: "name and phone are required",
+      });
+    }
 
+    const result = await pool.query(
+      `INSERT INTO customers
+        (agent_id, name, phone, email, memo, status)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [
+        req.user.agentId,
+        name,
+        phone,
+        email || null,
+        memo || null,
+        status || "lead",
+      ]
+    );
 
-
+    res.status(201).json({
+      message: "Customer created successfully",
+      customer: result.rows[0],
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "Failed to create customer",
+      error: err.message,
+    });
+  }
+});
 
 module.exports = router;
